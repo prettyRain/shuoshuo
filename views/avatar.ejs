@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+    <title>上传头像</title>
+    <link rel="stylesheet" href="/toptip/toptip.css">
+    <link rel="stylesheet" href="/jcrop/jquery.Jcrop.css">
+    <link rel="stylesheet" href="/jcrop/demos.css">
+    <!-- Bootstrap core CSS -->
+    <link href="/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+    <script src="https://cdn.bootcss.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="https://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+<!--头部-->
+<%include head.ejs%>
+<div class="container theme-showcase" role="main">
+    <div class="jumbotron">
+        <div class="media" style="margin-top:40px;">
+            <form enctype="multipart/form-data" id="formId" >
+                <div class="form-group">
+                    <label for="exampleInputFile">头像</label>
+                    <input type="file" id="exampleInputFile" accept="image/gif, image/jpeg" name="tupian">
+                </div>
+                <p  class="btn btn-default psubmit">提交<p/>
+            </form>
+
+        </div>
+        <!--裁切图片-->
+        <div id="outer" style="display:none;">
+            <div class="jcExample">
+                <div class="article">
+                    <h1>上传头像拖动例子</h1>
+                    <p id="xianshi"></p>
+                    <table>
+                        <tr>
+                            <td>
+                                <img  id="target" alt="Flowers" style="width:500px;height:500px;"/>
+                            </td>
+                            <td>
+                                <div style="width:100px;height:100px;overflow:hidden;" id="aa">
+                                    <img  id="preview" alt="Preview" class="jcrop-preview" />
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="subdiv">
+                <p class="subp btn btn-danger">提交裁切</p>
+            </div>
+        </div>
+
+    </div>
+
+</div> <!-- /container -->
+<script src="/bootstrap/js/bootstrap.js"></script>
+<script src="/bootstrap/js/jquery-1.11.3.js"></script>
+<script src="/toptip/toptip.js"></script>
+<script src="/jcrop/jquery.min.js"></script>
+<script src="/jcrop/jquery.Jcrop.min.js"></script>
+</body>
+</html>
+<script type="text/javascript">
+    var tip = tipAlert();
+
+    $('.psubmit').on('click',function(){
+        if(!$('#exampleInputFile').val()){
+            tip('内容不能为空');
+            return ;
+        }
+      $.ajax({
+          type:"post",
+          url:"/doAvatar",
+          dataType:"json",
+          data:new FormData(document.getElementById("formId")),
+          contentType:false,
+          processData:false,
+          success:function(result){
+               if(result=="-1"){
+                   tip('上传图片错误');
+                   return;
+               }else if(result == "-2"){
+                   window.location.href = "/";
+               }
+              $('#outer').slideDown(1000);
+              $('#target').width("500px").height("500px").attr("src","/"+result.username+".jpg");
+              $('#preview').attr("src","/"+result.username+".jpg");
+
+              //加载裁切图片js
+              new cutImage().init();
+          }
+      })
+    $(".subp").on('click',function(){
+           $.post("/setAvatar",xyhw,function(result){
+              if(result == "-2"){
+                  tip("报错");
+                  return;
+              }
+              window.location.href = "/";
+           })
+    })
+    })
+    var xyhw = {};
+    var x,y,h,w;
+
+    function cutImage(){
+        var oop = this;
+        this.option = {
+            x:170,
+            y:110,
+            w:350,
+            h:200,
+            t:'target',
+            p:'preview',
+            o:'aa',
+            q:'xianshi'
+        }
+        this.init = function(){
+            oop.target();
+        }
+        this.target = function(){
+            $('#'+oop.option['t']).Jcrop({
+                onChange: oop.updatePreview,
+                onSelect: oop.updatePreview,
+                aspectRatio: 1,
+                setSelect: [ oop.option['x'], oop.option['y'], oop.option['w'],oop.option['h'] ],
+                bgFade:     true,
+                bgOpacity: .5
+            });
+        }
+        this.updatePreview = function(obj){
+            if (parseInt(obj.w) > 0)
+            {
+                var rx = $('#'+oop.option['o']).width()/ obj.w;
+                var ry = $('#'+oop.option['o']).height()/ obj.h;
+                var holder = document.querySelector('.jcrop-holder').children[0];
+                w = getcurrentStyle(holder,"width");
+                h = getcurrentStyle(holder,"height");
+                x = getcurrentStyle(holder,"left");
+                y  = getcurrentStyle(holder,"top");
+                document.querySelector("#xianshi").innerHTML = "x:"+x+";"+"y"+y+";"+"w:"+w+"h:"+h;
+                xyhw.x = parseInt(x);
+                xyhw.y = parseInt(y);
+                xyhw.w = parseInt(w);
+                xyhw.h = parseInt(h);
+                $('#'+oop.option['p']).css({
+                    width: Math.round(rx*$('#'+oop.option['t']).width()) + 'px',
+                    height: Math.round(ry*$('#'+oop.option['t']).height()) + 'px',
+                    marginLeft: '-' + Math.round(rx * obj.x) + 'px',
+                    marginTop: '-' + Math.round(ry * obj.y) + 'px'
+                });
+            }
+        }
+    }
+    function getcurrentStyle(ele,attr){
+        if(window.getComputedStyle){
+            return window.getComputedStyle(ele,null)[attr];
+        }else{
+            //IE
+            return ele.currentStyle(attr);
+        }
+    }
+</script>

@@ -1,0 +1,25 @@
+
+p.ptip {
+    padding:0 20px;
+    line-height:40px;
+    font-size:14px;
+    border-radius:20px;
+    background-image:linear-gradient(90deg,yellow 33% ,#ff7238 66%, #ff7238 100%);
+    position:fixed;
+    top:-40px;
+    left:50%;
+    font-weight:700;
+    cursor:pointer;
+
+}
+ .animate{
+    animation:mymove 2s forwards;
+   }
+ @keyframes mymove {
+     from{
+        top:-40px;
+    }
+     to{
+         top:200px;
+     }
+ }
