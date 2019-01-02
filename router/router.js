@@ -330,7 +330,7 @@ exports.user = function(req,res,next){
                         result2[i].avatar = result1[0].avatar;
                     }
                     console.log(result2);
-                    res.render('userlist',{login:"-1",active:"我的说说",userposts:result2});
+                    res.render('user',{login:"-1",active:"我的说说",userposts:result2});
                 })
             
             }
